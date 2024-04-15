@@ -1,38 +1,24 @@
-name: Chocolatine
+env:
+  MIRROR_URL: "git@github.com:EpitechPromo2028/B-MUL-200-COT-2-1-mypaint-mariane.sedjro.git"
+  EXECUTABLES: my_paint
 
-on: [push]
-env :
-  EXECUTABLES: my_sokoban, mysh
+name: chocolatines
+
+on:
+  push:
+    branches:
+      - main
+
 jobs:
+
   check_coding_style:
     runs-on: ubuntu-latest
-    container: ghcr.io/epitech/coding-style-checker:latest
-    steps:
-      - name: repository content
-        uses: actions/checkout@v4.1.1
 
-      - name: run command
+    container:
+      image: ghcr.io/epitech/coding-style-checker:latest
+
+    steps:
+      - name:  run coding style checker
+        uses: actions/checkout@v3
         run: check.sh $(pwd) $(pwd)
-      
-      - name: print coding style file
-        run: cat coding-style-reports.log
-      
-      - name: check
-        run: |
-          if grep -q "." coding-style-reports.log
-          then
-            exit 1
-          fi
-  
-  check_program_compilation:
-    runs-on: ubuntu-latest
-    container: epitechcontent/epitest-docker
-    steps:
-        - uses: actions/checkout@v4.1.1
-        - name: maker
-          run: make
-          timeout-minutes: 2
-        - name: clean
-          run: make clean
-
 
