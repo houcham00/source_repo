@@ -18,7 +18,8 @@ jobs:
       image: ghcr.io/epitech/coding-style-checker:latest
 
     steps:
-      - name:  run coding style checker
-        uses: actions/checkout@v3
-        run: check.sh $(pwd) $(pwd)
+      - name:   run coding style checker
+        uses:   actions/checkout@v3
+      - name:   check script
+        run:    check.sh $(pwd) $(pwd)
 
