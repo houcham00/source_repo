@@ -1,59 +1,87 @@
-name: coding-style
-
+name: chocolatine
+env:
+  MIRROR_URL: "git@github.com:dssurvolt/mirror_repo.git"
+  EXECUTABLES: "my_ls"
 on:
-  push:
-    branches-ignore:
-      - 'ga-ignore-*'
-  pull_request:
-    branches-ignore:
-      - 'ga-ignore-*'
-
-env: 
-  MIRROR_URL: "git@github.com:EpitechPromo2028/B-DOP-200-COT-2-1-chocolatine-amour.guidi.git"
-  EXECUTABLES: "minicut"
+    push:
+      branch-ignore:
+        - 'ga-ignore*'
+    pull_request:
+      branch-ignore:
+        - 'ga-ignore*'
 
 jobs:
   check_coding_style:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/epitech/coding-style-checker:latest
+    container: ghcr.io/epitech/coding-style-checker:latest
     steps:
-      - uses: actions/checkout@v4
-      - name: check_coding_style
-        run: check.sh $(pwd) $(pwd)
 
+      - name: action usedrt
+        uses: actions/checkout@v4
+
+      - name: Run coding-style
+        run: check.sh . /tmp
+
+      - name: print coding-style errors
+        run: |
+          input=/tmp/coding-style-reports.log
+          while IFS= read -r -a line; do
+            fields=($(printf "%s" "$line"|cut -d':' --output-delimiter=' ' -f1-))
+            echo "::error title=${fields[2]} coding style error,file=${fields[0]},line=${fields[1]}::${fields[3]}"
+          done < $input
+
+      - name: Report the result
+        run: |
+          NB_ERROR=$(cat /tmp/coding-style-reports.log | wc -l)
+          if [ $NB_ERROR -gt 1 ]; then
+            exit 1
+          fi
   check_program_compilation:
     needs: check_coding_style
     runs-on: ubuntu-latest
     container: epitechcontent/epitest-docker
     steps:
-      - uses: actions/checkout@v4
-      - name: it_make
+
+      - name: action usedrt
+        uses: actions/checkout@v4
+      - name: compilation
         run: make
         timeout-minutes: 2
-      - name: it_make_clean
-        run: make clean
 
+      - name: clean repo
+        run: make clean
+      - name: Files verification
+        run: |
+          IFS=',' read -ra executables <<< "${EXECUTABLES}"
+          for executable in "${executables}"; do
+            if [[ ! -x "${executable}" ]]; then
+              echo "Error: Rakib, ${executable} d'ont exist, check correctly and try again"
+              exit 84
+            fi
+          done
   run_tests:
     needs: check_program_compilation
     runs-on: ubuntu-latest
     container: epitechcontent/epitest-docker
     steps:
-      - uses: actions/checkout@v4
-      - name: test_run
+
+      - name: action usedrt
+        uses: actions/checkout@v4
+      - name: unit tests
         run: make tests_run
         timeout-minutes: 2
-
   push_to_mirror:
-    needs: run_tests
+    needs:  run_tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+
+      - name: action usedrt
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: pixta-dev/repository-mirroring-action@v1
+      - uses: pixta-dev/repository-mirroring-action@v4
         with:
           target_repo_url:
-            ${{ env.MIRROR_URL }}
+            ${{env.MIRROR_URL}}
           ssh_private_key:
-            ${{ secrets.GIT_SSH_PRIVATE_KEY }}
+            ${{ secrets.GIT_SSH_PRIVATE_KEY}}
