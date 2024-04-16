@@ -1,25 +1,77 @@
-env:
-  MIRROR_URL: "git@github.com:EpitechPromo2028/B-MUL-200-COT-2-1-mypaint-mariane.sedjro.git"
-  EXECUTABLES: my_paint
-
-name: chocolatines
+name: Chocolatine
 
 on:
   push:
-    branches:
-      - main
+    branches-ignore:
+      - 'ga-ignore-*'
+  pull_request:
+    branches-ignore:
+      - 'ga-ignore-*'
+
+env:
+  MIRROR_URL: git@github.com:EpitechPromo2028/B-DOP-200-COT-2-1-chocolatine-evans.zime.git
+  EXECUTABLES: amazed
 
 jobs:
-
   check_coding_style:
     runs-on: ubuntu-latest
-
     container:
       image: ghcr.io/epitech/coding-style-checker:latest
-
     steps:
-      - name:   run coding style checker
-        uses:   actions/checkout@v3
-      - name:   check script
-        run:    check.sh $(pwd) $(pwd)
+      - name: check_repository
+        uses: actions/checkout@v4
+      - name: coding-style
+        run: check.sh $(pwd) $(pwd)
+      - name: display coding-style-report-log
+        run: cat coding-style-reports.log
+      - name: test verifie
+        run: |
+          if grep -q "error" in coding-style-report.log; then
+            exit 1
+          fi
 
+  check_program_compilation:
+    needs: check_coding_style
+    runs-on: ubuntu-latest
+    container:
+      image: epitechcontent/epitest-docker
+    steps:
+      - name: checkout_repository
+        uses: actions/checkout@v4
+      - name: check make
+        run: make
+        timeout-minutes: 2
+      - name: check make fclean
+        run: make clean
+      - name: verifie test
+        run: |
+          IFS=' ' read -ra i <<< "$EXECUTABLES"
+          for i in "${i[@]}"; do
+            if [ ! -x "$i" ]; then
+              echo "Le fichier $i n'est pas exécutable"
+              exit 1
+            fi
+          done
+
+  run_tests:
+    needs: check_program_compilation
+    runs-on: ubuntu-latest
+    container:
+      image: epitechcontent/epitest-docker
+    steps:
+      - name: checkout_repository
+        uses: actions/checkout@v4
+      - name: checkout_repository
+        run: make tests_run
+  push_to_mirror:
+    needs: run_tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Mirror repository
+      uses: pixta-dev/repository-mirroring-action@v1.1.1
+      with:
+        target_repo_url: git@github.com:EpitechPromo2028/B-DOP-200-COT-2-1-chocolatine-evans.zime.git
+        ssh_private_key: ${{ secrets.3CMtJVbvWgBYtLalgPYV6AbBmmtGl09AOCwWPlqn0ZY }}

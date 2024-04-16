@@ -25,4 +25,5 @@ int main(void)
 {
     char *d = malloc(sizeof(char) * 11);
     printf("%s", my_strncpy(d, "Houcham0000000", 10));
+    return 0;
 }
